@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Artificial Neural Networks · Interactive labs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400..700&display=swap" rel="stylesheet">
+<style>
+  :root { --navy:#123744; --ink:#232830; --muted:#4A5560; --paper:#FAFBFB; --mist:#EAF6F3; --camb:#8EE8D8; --teal:#0B5E5A; --line:#D5E3E0; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Open Sans', Arial, sans-serif; color: var(--ink); background: var(--paper); }
+  header { background: var(--camb); padding: 56px 24px 44px; }
+  .wrap { max-width: 1040px; margin: 0 auto; }
+  .eyebrow { font-size: 14px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--teal); margin: 0 0 10px; }
+  h1 { font-size: clamp(32px, 5vw, 48px); line-height: 1.1; color: var(--navy); margin: 0 0 12px; }
+  header p { font-size: 18px; color: var(--navy); margin: 0; }
+  main { padding: 40px 24px 56px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
+  a.card { display: flex; flex-direction: column; gap: 10px; background: #fff; border: 2px solid var(--line); border-radius: 16px; padding: 28px; text-decoration: none; color: inherit; transition: border-color .15s, transform .15s; }
+  a.card:hover, a.card:focus-visible { border-color: var(--teal); transform: translateY(-2px); outline: none; }
+  .lec { font-size: 13px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--teal); }
+  h2 { font-size: 24px; color: var(--navy); margin: 0; }
+  .card p { font-size: 16px; line-height: 1.5; color: var(--muted); margin: 0; }
+  .go { margin-top: auto; font-weight: 700; color: var(--navy); background: var(--mist); border-radius: 999px; padding: 8px 18px; align-self: flex-start; font-size: 15px; }
+  footer { font-size: 14px; color: var(--muted); padding: 0 24px 40px; }
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <p class="eyebrow">Part II PDN · Module N3 · University of Cambridge</p>
+  <h1>Artificial Neural Networks: interactive labs</h1>
+  <p>One lab for each lecture. Everything runs in your browser, on laptops and phones.</p>
+</div></header>
+<main><div class="wrap grid">
+  <a class="card" href="neuron-lab/"><span class="lec">Lecture 1 · The artificial neuron</span><h2>Neuron Lab</h2><p>Set a neuron’s weights by hand, watch gradient descent learn them, and see why some problems need a hidden layer.</p><span class="go">Open the lab</span></a>
+  <a class="card" href="convolution-lab/"><span class="lec">Lecture 2 · Vision</span><h2>Convolution Lab</h2><p>Design filters, explore stride, padding and pooling, and draw digits for a trained convolutional network.</p><span class="go">Open the lab</span></a>
+  <a class="card" href="attention-lab/"><span class="lec">Lecture 3 · Language</span><h2>Attention Lab</h2><p>See what “it” attends to in a sentence, explore the causal mask, and write text with a small transformer.</p><span class="go">Open the lab</span></a>
+</div></main>
+<footer><div class="wrap">Dr Andrea Dimitracopoulos · ad865@cam.ac.uk</div></footer>
+</body>
+</html>

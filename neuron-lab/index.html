@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Neuron Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400..700;1,400..700&family=Noto+Sans:ital,wght@0,400..700;1,400..700&family=Noto+Sans+Math&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* University of Cambridge palette: Cambridge Blue base, Dark Blue accent, Slate text.
+     Layout: three columns (controls | plot | maths and tasks) that stack on narrow screens. */
+  --blue: #8EE8D8;
+  --blue-light: #D1F9F1;
+  --blue-warm: #00BDB6;
+  --blue-dark: #133844;
+  --ink: #232830;
+  --muted: #55636B;
+  --paper: #FFFFFF;
+  --wash: #F3F8F7;
+  --rule: #D5E3E0;
+  --crest: #FD8153;
+  --crest-light: #FFE2C8;
+  --crest-dark: #DD3025;
+  --pos: #00A39D;
+  --neg: #E8673A;
+  --font-display: "Open Sans", "Noto Sans", "Noto Sans Math", Arial, Helvetica, sans-serif;
+  --font-body: "Open Sans", "Noto Sans", "Noto Sans Math", Arial, Helvetica, sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--wash);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.5;
+}
+header {
+  background: var(--blue);
+  padding: 18px 24px 16px;
+}
+.header-inner {
+  max-width: 1440px; margin: 0 auto;
+  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px;
+}
+h1 {
+  font-family: var(--font-display); font-weight: 700; font-size: 30px; line-height: 1.1;
+  margin: 0; color: var(--blue-dark); text-wrap: balance;
+}
+.course { font-size: 13px; color: var(--blue-dark); }
+nav.steps {
+  max-width: 1440px; margin: 14px auto 0;
+  display: flex; flex-wrap: wrap; gap: 8px;
+}
+nav.steps button {
+  font: inherit; font-weight: 600; font-size: 14px;
+  border: 1.5px solid var(--blue-dark); background: transparent; color: var(--blue-dark);
+  border-radius: 999px; padding: 6px 14px 6px 6px; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 8px;
+}
+nav.steps button .n {
+  display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%;
+  background: var(--blue-dark); color: #fff; font-size: 13px;
+}
+nav.steps button[aria-selected="true"] { background: var(--blue-dark); color: #fff; }
+nav.steps button[aria-selected="true"] .n { background: var(--blue); color: var(--blue-dark); }
+nav.steps button:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible {
+  outline: 3px solid var(--blue-warm); outline-offset: 2px;
+}
+main {
+  max-width: 1440px; margin: 0 auto; padding: 20px 24px 32px;
+  display: grid; gap: 20px;
+  grid-template-columns: 290px minmax(340px, 1fr) 340px;
+  align-items: start;
+}
+@media (max-width: 1180px) {
+  main { grid-template-columns: 290px minmax(320px, 1fr); }
+  #explain { grid-column: 1 / -1; }
+}
+@media (max-width: 760px) {
+  main { grid-template-columns: 1fr; padding: 16px; }
+  #plot-panel { order: -1; }
+  header { padding: 16px; }
+}
+.panel {
+  background: var(--paper); border: 1px solid var(--rule); border-radius: 10px;
+  padding: 16px;
+}
+.stack { display: flex; flex-direction: column; gap: 16px; }
+h2 {
+  font-family: var(--font-display); font-weight: 700; font-size: 18px; margin: 0 0 8px;
+  color: var(--blue-dark); text-wrap: balance;
+}
+h3 { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+p { margin: 0 0 8px; }
+p:last-child { margin-bottom: 0; }
+.seg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.seg button {
+  font: inherit; font-size: 13px; font-weight: 600; text-align: left;
+  border: 1px solid var(--rule); background: var(--paper); color: var(--ink);
+  border-radius: 8px; padding: 8px 10px; cursor: pointer;
+}
+.seg button[aria-pressed="true"] { border-color: var(--blue-dark); background: var(--blue-light); color: var(--blue-dark); }
+.ds-blurb { font-size: 13px; color: var(--muted); margin-top: 10px; }
+.field { display: grid; gap: 4px; margin-bottom: 12px; }
+.field:last-child { margin-bottom: 0; }
+.field label, .field .lab { font-size: 13px; font-weight: 600; display: flex; justify-content: space-between; gap: 8px; }
+.field output, .num { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--blue-dark); }
+input[type=range] { width: 100%; accent-color: var(--blue-dark); }
+input[type=range]:disabled { accent-color: var(--blue-warm); }
+select {
+  font: inherit; font-size: 14px; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--rule);
+  background: var(--paper); color: var(--ink);
+}
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.btn {
+  font: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+  border-radius: 8px; padding: 8px 14px; border: 1.5px solid var(--blue-dark);
+  background: var(--paper); color: var(--blue-dark);
+}
+.btn.primary { background: var(--blue-dark); color: #fff; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.check { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; }
+.radio-row { display: flex; gap: 14px; font-size: 14px; }
+.radio-row label { display: inline-flex; gap: 6px; align-items: center; font-weight: 400; }
+.hidden { display: none !important; }
+.note { font-size: 13px; color: var(--muted); }
+.warn { font-size: 13px; color: var(--crest-dark); font-weight: 600; }
+
+/* Plot */
+#plot-wrap { position: relative; }
+#plot { width: 100%; aspect-ratio: 1 / 1; display: block; max-width: 640px; margin: 0 auto; touch-action: none; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; margin-top: 10px; justify-content: center; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.dot { width: 11px; height: 11px; border-radius: 50%; display: inline-block; border: 1px solid rgba(19,56,68,.7); }
+.sq { width: 10px; height: 10px; display: inline-block; border: 1px solid rgba(19,56,68,.7); }
+.hollow { background: transparent !important; border-width: 2px; }
+#readout { font-size: 13px; color: var(--muted); text-align: center; min-height: 20px; margin-top: 6px; font-variant-numeric: tabular-nums; }
+
+.metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 14px; }
+.metric { background: var(--wash); border-radius: 8px; padding: 8px 10px; }
+.metric .k { font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+.metric .v { font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--blue-dark); line-height: 1.2; }
+@media (max-width: 460px) { .metrics { grid-template-columns: repeat(2, 1fr); } }
+
+/* Maths */
+.math {
+  font-family: var(--font-body); font-size: 17px; line-height: 1.7; color: var(--ink);
+  background: var(--wash); border-radius: 8px; padding: 10px 12px; overflow-x: auto;
+}
+.math i { font-style: italic; }
+.math .live { font-family: var(--font-body); font-size: 15px; font-weight: 600; color: var(--blue-dark); font-variant-numeric: tabular-nums; }
+.math .cap { display: block; font-family: var(--font-body); font-size: 12px; color: var(--muted); line-height: 1.4; margin-bottom: 2px; }
+.math + .math { margin-top: 8px; }
+canvas.net { width: 100%; height: 190px; display: block; }
+canvas.chart { width: 100%; height: 160px; display: block; }
+#thumbs { display: grid; grid-template-columns: repeat(auto-fill, minmax(62px, 1fr)); gap: 8px; }
+#thumbs figure { margin: 0; text-align: center; font-size: 11px; color: var(--muted); }
+#thumbs canvas { width: 100%; aspect-ratio: 1/1; border-radius: 6px; border: 1px solid var(--rule); display: block; }
+.thumb-layer { font-size: 12px; font-weight: 700; color: var(--muted); margin: 6px 0 4px; grid-column: 1 / -1; }
+
+/* Tasks */
+ol.tasks { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+ol.tasks li { display: grid; grid-template-columns: 22px 1fr; gap: 8px; font-size: 14px; }
+.tick {
+  width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--rule); margin-top: 1px;
+  display: grid; place-items: center; font-size: 12px; color: #fff;
+}
+.tick.done { background: var(--pos); border-color: var(--pos); }
+.tick.q { border-style: dashed; border-color: var(--muted); }
+details { margin-top: 4px; }
+summary { cursor: pointer; font-size: 13px; font-weight: 600; color: var(--blue-dark); }
+details p { font-size: 13px; color: var(--ink); margin-top: 4px; }
+.task-status { font-size: 12px; color: var(--pos); font-weight: 700; }
+footer { max-width: 1440px; margin: 0 auto; padding: 0 24px 28px; font-size: 12px; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="header-inner">
+    <h1>Neuron Lab</h1>
+    <div class="course">Artificial Neural Networks, Lecture 1 · Part II PDN, University of Cambridge</div>
+  </div>
+  <nav class="steps" role="tablist" aria-label="Steps">
+    <button role="tab" id="tab-by-hand" data-step="by-hand"><span class="n">1</span>One neuron by hand</button>
+    <button role="tab" id="tab-learn" data-step="learn"><span class="n">2</span>Let it learn</button>
+    <button role="tab" id="tab-hidden" data-step="hidden"><span class="n">3</span>Add hidden neurons</button>
+  </nav>
+</header>
+
+<main>
+  <!-- Controls -->
+  <div class="stack" id="controls">
+    <section class="panel" aria-labelledby="h-data">
+      <h2 id="h-data">Data</h2>
+      <div class="seg" id="datasets">
+        <button data-ds="celltype">Cell type</button>
+        <button data-ds="place">Place cell</button>
+        <button data-ds="xor">XOR</button>
+        <button data-ds="spiral">Spiral</button>
+      </div>
+      <p class="ds-blurb" id="ds-blurb"></p>
+      <div class="field" style="margin-top:12px">
+        <label for="noise">Noise <output id="noise-out"></output></label>
+        <input type="range" id="noise" min="0" max="60" step="5" value="15">
+      </div>
+      <div class="row">
+        <label class="check"><input type="checkbox" id="show-test" checked> Show test data</label>
+        <button class="btn" id="resample" type="button">New sample</button>
+      </div>
+    </section>
+
+    <!-- Step 1 controls -->
+    <section class="panel" data-for="by-hand" aria-labelledby="h-hand">
+      <h2 id="h-hand">Weights and bias</h2>
+      <div class="field">
+        <label for="w1"><span>w<sub>1</sub> <span class="note" id="w1-name"></span></span><output id="w1-out"></output></label>
+        <input type="range" id="w1" min="-8" max="8" step="0.05">
+      </div>
+      <div class="field">
+        <label for="w2"><span>w<sub>2</sub> <span class="note" id="w2-name"></span></span><output id="w2-out"></output></label>
+        <input type="range" id="w2" min="-8" max="8" step="0.05">
+      </div>
+      <div class="field">
+        <label for="b"><span>b <span class="note">(bias)</span></span><output id="b-out"></output></label>
+        <input type="range" id="b" min="-8" max="8" step="0.05">
+      </div>
+      <div class="field">
+        <span class="lab">Activation function</span>
+        <div class="radio-row" role="radiogroup" aria-label="Activation function">
+          <label><input type="radio" name="act1" id="act-step" value="step"> Step</label>
+          <label><input type="radio" name="act1" id="act-sig" value="sigmoid"> Sigmoid</label>
+        </div>
+      </div>
+      <button class="btn" id="randomise" type="button">Random weights</button>
+    </section>
+
+    <!-- Step 2 controls -->
+    <section class="panel" data-for="learn" aria-labelledby="h-learn">
+      <h2 id="h-learn">Learning</h2>
+      <div class="field">
+        <label for="rule">Learning rule</label>
+        <select id="rule">
+          <option value="gd">Gradient descent (cross-entropy loss)</option>
+          <option value="perceptron">Perceptron rule (Rosenblatt, 1958)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="lr1">Learning rate η <output id="lr1-out"></output></label>
+        <input type="range" id="lr1" min="0" max="100" step="1">
+      </div>
+      <div class="row">
+        <button class="btn primary" id="train1" type="button">Train</button>
+        <button class="btn" id="epoch1" type="button">One epoch</button>
+        <button class="btn" id="reset1" type="button">Reset weights</button>
+      </div>
+      <p class="note" id="learn-note" style="margin-top:10px"></p>
+      <div style="margin-top:12px">
+        <div class="field"><span class="lab"><span>w<sub>1</sub></span> <output id="lw1"></output></span><input type="range" id="lw1r" min="-8" max="8" step="0.01" disabled aria-label="w1, set by learning"></div>
+        <div class="field"><span class="lab"><span>w<sub>2</sub></span> <output id="lw2"></output></span><input type="range" id="lw2r" min="-8" max="8" step="0.01" disabled aria-label="w2, set by learning"></div>
+        <div class="field"><span class="lab">b <output id="lb"></output></span><input type="range" id="lbr" min="-8" max="8" step="0.01" disabled aria-label="bias, set by learning"></div>
+      </div>
+    </section>
+
+    <!-- Step 3 controls -->
+    <section class="panel" data-for="hidden" aria-labelledby="h-net">
+      <h2 id="h-net">Network</h2>
+      <div class="field">
+        <span class="lab">Hidden layers</span>
+        <div class="radio-row" role="radiogroup" aria-label="Hidden layers">
+          <label><input type="radio" name="layers" value="1" id="layers-1"> 1</label>
+          <label><input type="radio" name="layers" value="2" id="layers-2"> 2</label>
+        </div>
+      </div>
+      <div class="field">
+        <label for="neurons">Neurons per layer <output id="neurons-out"></output></label>
+        <input type="range" id="neurons" min="1" max="8" step="1">
+      </div>
+      <div class="field">
+        <label for="act3">Activation function</label>
+        <select id="act3">
+          <option value="tanh">tanh</option>
+          <option value="relu">ReLU</option>
+          <option value="sigmoid">Sigmoid</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="lr3">Learning rate η <output id="lr3-out"></output></label>
+        <input type="range" id="lr3" min="0" max="100" step="1">
+      </div>
+      <div class="row">
+        <button class="btn primary" id="train3" type="button">Train</button>
+        <button class="btn" id="epoch3" type="button">One epoch</button>
+        <button class="btn" id="reset3" type="button">Reset weights</button>
+      </div>
+      <p class="warn hidden" id="diverged" style="margin-top:10px">Training diverged. Lower the learning rate, then press Reset weights.</p>
+    </section>
+  </div>
+
+  <!-- Plot -->
+  <section class="panel" id="plot-panel" aria-labelledby="h-plot">
+    <h2 id="h-plot">What the model predicts</h2>
+    <div id="plot-wrap"><canvas id="plot" aria-label="Scatter plot of the data with the model's prediction shaded behind it"></canvas></div>
+    <div class="legend" id="legend"></div>
+    <div id="readout">Move the pointer over the plot to read the model's output.</div>
+    <div class="metrics">
+      <div class="metric"><div class="k">Train accuracy</div><div class="v" id="m-train">–</div></div>
+      <div class="metric"><div class="k">Test accuracy</div><div class="v" id="m-test">–</div></div>
+      <div class="metric"><div class="k" id="m-loss-k">Loss</div><div class="v" id="m-loss">–</div></div>
+      <div class="metric"><div class="k">Epoch</div><div class="v" id="m-epoch">–</div></div>
+    </div>
+  </section>
+
+  <!-- Explanation -->
+  <div class="stack" id="explain">
+    <section class="panel" aria-labelledby="h-what">
+      <h2 id="h-what">The idea</h2>
+      <p id="idea"></p>
+      <canvas class="net" id="net" aria-label="Diagram of the network with weights drawn as lines"></canvas>
+      <p class="note">Line thickness shows the size of each weight: <span style="color:var(--pos);font-weight:700">teal</span> is positive, <span style="color:var(--neg);font-weight:700">orange</span> is negative.</p>
+    </section>
+    <section class="panel" aria-labelledby="h-maths">
+      <h2 id="h-maths">The maths</h2>
+      <div id="maths"></div>
+    </section>
+    <section class="panel hidden" id="thumb-panel" aria-labelledby="h-thumbs">
+      <h2 id="h-thumbs">What each hidden neuron detects</h2>
+      <p class="note">Each map shows one hidden neuron's output across the whole input space.</p>
+      <div id="thumbs"></div>
+    </section>
+    <section class="panel hidden" id="chart-panel" aria-labelledby="h-chart">
+      <h2 id="h-chart">Loss during training</h2>
+      <canvas class="chart" id="chart" aria-label="Line chart of training and test loss against epoch"></canvas>
+    </section>
+    <section class="panel" aria-labelledby="h-tasks">
+      <h2 id="h-tasks">Try this</h2>
+      <ol class="tasks" id="tasks"></ol>
+    </section>
+  </div>
+</main>
+<footer>All datasets are simulated for teaching. They are realistic in shape, not real recordings.</footer>
+
+<script>
+"use strict";
+/* ---------- Utilities ---------- */
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => Array.from(document.querySelectorAll(s));
+function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function gauss(r) { let u = 0, v = 0; while (u === 0) u = r(); while (v === 0) v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+const sigmoid = (z) => 1 / (1 + Math.exp(-clamp(z, -40, 40)));
+const fmt = (x, d = 2) => (x < 0 ? "−" : "") + Math.abs(x).toFixed(d);
+const signed = (x, d = 2) => (x < 0 ? " − " : " + ") + Math.abs(x).toFixed(d);
+const pct = (x) => isFinite(x) ? Math.round(x * 100) + "%" : "–";
+const lrFromSlider = (s) => Math.pow(10, -2 + 3 * s / 100);
+const sliderFromLr = (lr) => Math.round((Math.log10(lr) + 2) / 3 * 100);
+const CSSV = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+/* ---------- Datasets (simulated, in real units) ---------- */
+const DATASETS = {
+  celltype: {
+    blurb: "Each point is a recorded neuron. Fast-spiking interneurons tend to have narrow spikes and high firing rates; pyramidal cells have broader spikes and fire less.",
+    x: { label: "Spike width", unit: "ms", min: 0.1, max: 1.1, ticks: [0.2, 0.4, 0.6, 0.8, 1.0], d: 2, short: "spike width" },
+    y: { label: "Firing rate", unit: "Hz", min: 0, max: 70, ticks: [0, 10, 20, 30, 40, 50, 60, 70], d: 0, short: "firing rate" },
+    classes: ["Pyramidal cell", "Fast-spiking interneuron"],
+    n: 200,
+    gen(r, n, noise) {
+      const pts = [], s = 1 + 2.2 * noise;
+      for (let i = 0; i < n; i++) {
+        const y = i % 2;
+        let w, f;
+        if (y === 1) { w = 0.34 + 0.05 * s * gauss(r); f = 36 + 9 * s * gauss(r); }
+        else { w = 0.68 + 0.08 * s * gauss(r); f = 9 + 5 * s * gauss(r); }
+        pts.push({ x: clamp(w, 0.12, 1.08), y: clamp(f, 0.5, 69), c: y });
+      }
+      return pts;
+    }
+  },
+  place: {
+    blurb: "Each point is the rat's position in a 1 m square arena. Teal points are positions where the place cell fired; its place field is a roughly circular patch.",
+    x: { label: "Position x", unit: "cm", min: 0, max: 100, ticks: [0, 20, 40, 60, 80, 100], d: 0, short: "x" },
+    y: { label: "Position y", unit: "cm", min: 0, max: 100, ticks: [0, 20, 40, 60, 80, 100], d: 0, short: "y" },
+    classes: ["Silent", "Spike"],
+    n: 220,
+    gen(r, n, noise) {
+      const cx = 58, cy = 44, R = 24, pts = [];
+      let inside = 0, outside = 0;
+      while (inside + outside < n) {
+        const x = 100 * r(), y = 100 * r();
+        const d = Math.hypot(x - cx, y - cy) + 9 * noise * gauss(r);
+        const c = d < R ? 1 : 0;
+        if (c === 1 && inside < n / 2) { pts.push({ x, y, c }); inside++; }
+        else if (c === 0 && outside < n / 2) { pts.push({ x, y, c }); outside++; }
+      }
+      return pts;
+    }
+  },
+  xor: {
+    blurb: "The classic problem that Minsky and Papert (1969) used to show the limits of a single perceptron: the output is 1 when x₁ and x₂ have the same sign.",
+    x: { label: "x₁", unit: "", min: -1, max: 1, ticks: [-1, -0.5, 0, 0.5, 1], d: 2, short: "x₁" },
+    y: { label: "x₂", unit: "", min: -1, max: 1, ticks: [-1, -0.5, 0, 0.5, 1], d: 2, short: "x₂" },
+    classes: ["Different signs", "Same sign"],
+    n: 200,
+    gen(r, n, noise) {
+      const pts = [];
+      while (pts.length < n) {
+        let x = 2 * r() - 1, y = 2 * r() - 1;
+        if (Math.abs(x) < 0.12 || Math.abs(y) < 0.12) continue;
+        const c = (x * y > 0) ? 1 : 0;
+        x = clamp(x + 0.25 * noise * gauss(r), -0.99, 0.99);
+        y = clamp(y + 0.25 * noise * gauss(r), -0.99, 0.99);
+        pts.push({ x, y, c });
+      }
+      return pts;
+    }
+  },
+  spiral: {
+    blurb: "Two interleaved spirals. There is no simple rule here: the network has to bend its boundary many times.",
+    x: { label: "x₁", unit: "", min: -1, max: 1, ticks: [-1, -0.5, 0, 0.5, 1], d: 2, short: "x₁" },
+    y: { label: "x₂", unit: "", min: -1, max: 1, ticks: [-1, -0.5, 0, 0.5, 1], d: 2, short: "x₂" },
+    classes: ["Spiral A", "Spiral B"],
+    n: 300,
+    gen(r, n, noise) {
+      const pts = [], half = n / 2;
+      for (let i = 0; i < half; i++) {
+        const t = i / half, rad = 0.08 + 0.86 * t, ang = 1.25 * t * 2 * Math.PI;
+        for (const c of [0, 1]) {
+          const a = ang + c * Math.PI;
+          pts.push({
+            x: clamp(rad * Math.sin(a) + 0.12 * noise * gauss(r), -0.99, 0.99),
+            y: clamp(rad * Math.cos(a) + 0.12 * noise * gauss(r), -0.99, 0.99), c
+          });
+        }
+      }
+      return pts;
+    }
+  }
+};
+
+/* ---------- Model: a small multilayer perceptron with a sigmoid output ---------- */
+const ACT = {
+  tanh: { f: Math.tanh, d: (z, a) => 1 - a * a },
+  relu: { f: (z) => z > 0 ? z : 0, d: (z) => z > 0 ? 1 : 0 },
+  sigmoid: { f: sigmoid, d: (z, a) => a * (1 - a) }
+};
+class MLP {
+  constructor(sizes, act, rng) {
+    this.sizes = sizes; this.act = act; this.W = []; this.b = [];
+    const gain = act === "relu" ? Math.SQRT2 : 1;
+    for (let l = 1; l < sizes.length; l++) {
+      const fanIn = sizes[l - 1];
+      this.W.push(Array.from({ length: sizes[l] }, () => Array.from({ length: fanIn }, () => gain * gauss(rng) / Math.sqrt(fanIn))));
+      this.b.push(Array.from({ length: sizes[l] }, () => act === "relu" && l < sizes.length - 1 ? 0.1 : 0));
+    }
+  }
+  forward(u) {
+    const as = [u], zs = []; let a = u; const L = this.W.length;
+    for (let l = 0; l < L; l++) {
+      const W = this.W[l], b = this.b[l], z = new Array(W.length), out = new Array(W.length);
+      for (let i = 0; i < W.length; i++) {
+        let s = b[i]; const Wi = W[i];
+        for (let j = 0; j < Wi.length; j++) s += Wi[j] * a[j];
+        z[i] = s; out[i] = l === L - 1 ? sigmoid(s) : ACT[this.act].f(s);
+      }
+      zs.push(z); as.push(out); a = out;
+    }
+    return { as, zs };
+  }
+  p(u) { return this.forward(u).as[this.W.length][0]; }
+  z(u) { const f = this.forward(u); return f.zs[f.zs.length - 1][0]; }
+  /* One pass of mini-batch gradient descent on the cross-entropy loss. Returns mean gradient of the last batch. */
+  epochGD(data, lr, rng, batch = 10) {
+    const idx = shuffle(data.map((_, i) => i), rng); const L = this.W.length;
+    let lastGrad = null;
+    for (let s = 0; s < idx.length; s += batch) {
+      const gW = this.W.map(W => W.map(row => row.map(() => 0)));
+      const gb = this.b.map(b => b.map(() => 0));
+      const end = Math.min(idx.length, s + batch);
+      for (let k = s; k < end; k++) {
+        const d = data[idx[k]]; const { as, zs } = this.forward([d.u, d.v]);
+        let delta = [as[L][0] - d.c];                       // dL/dz at the output for sigmoid + cross-entropy
+        for (let l = L - 1; l >= 0; l--) {
+          const W = this.W[l], aPrev = as[l];
+          for (let i = 0; i < W.length; i++) {
+            gb[l][i] += delta[i];
+            for (let j = 0; j < aPrev.length; j++) gW[l][i][j] += delta[i] * aPrev[j];
+          }
+          if (l > 0) {
+            const nd = new Array(aPrev.length).fill(0);
+            for (let j = 0; j < aPrev.length; j++) {
+              let sum = 0; for (let i = 0; i < W.length; i++) sum += W[i][j] * delta[i];
+              nd[j] = sum * ACT[this.act].d(zs[l - 1][j], aPrev[j]);
+            }
+            delta = nd;
+          }
+        }
+      }
+      const m = end - s;
+      for (let l = 0; l < L; l++) {
+        for (let i = 0; i < this.W[l].length; i++) {
+          this.b[l][i] -= lr * gb[l][i] / m;
+          for (let j = 0; j < this.W[l][i].length; j++) this.W[l][i][j] -= lr * gW[l][i][j] / m;
+        }
+      }
+      if (L === 1) lastGrad = { w1: gW[0][0][0] / m, w2: gW[0][0][1] / m, b: gb[0][0] / m };
+    }
+    return lastGrad;
+  }
+  /* Rosenblatt's perceptron rule for a single neuron with a step output. */
+  epochPerceptron(data, lr, rng) {
+    const idx = shuffle(data.map((_, i) => i), rng); let last = null;
+    const W = this.W[0][0];
+    for (const k of idx) {
+      const d = data[k]; const z = W[0] * d.u + W[1] * d.v + this.b[0][0];
+      const yhat = z > 0 ? 1 : 0, err = d.c - yhat;
+      if (err !== 0) {
+        W[0] += lr * err * d.u; W[1] += lr * err * d.v; this.b[0][0] += lr * err;
+        last = { err, u: d.u, v: d.v };
+      }
+    }
+    return last;
+  }
+}
+function shuffle(a, rng) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+/* ---------- State ---------- */
+const S = {
+  step: "by-hand", ds: "celltype", noise: 0.15, seed: 11, showTest: true,
+  manual: { w1: 0.5, w2: 2.0, b: 0.2, act: "sigmoid" },
+  learn: { rule: "gd", lr: 0.5, model: null, fromManual: true },
+  net: { layers: 1, neurons: 3, act: "tanh", lr: 0.3, model: null },
+  train: [], test: [], epoch: 0, history: [], running: false, diverged: false, lastGrad: null, lastPerc: null,
+  metrics: { trainAcc: NaN, testAcc: NaN, loss: NaN, testLoss: NaN },
+  solved: new Set(), best: {}
+};
+let rng = mulberry32(12345);
+
+function toU(val, ax) { return 2 * (val - ax.min) / (ax.max - ax.min) - 1; }
+function fromU(u, ax) { return ax.min + (u + 1) / 2 * (ax.max - ax.min); }
+
+function makeData() {
+  const D = DATASETS[S.ds], r = mulberry32(S.seed * 7919 + Object.keys(DATASETS).indexOf(S.ds));
+  const pts = D.gen(r, D.n, S.noise).map(p => ({ ...p, u: toU(p.x, D.x), v: toU(p.y, D.y) }));
+  // Flip a few labels when noise is high, to make overfitting visible.
+  for (const p of pts) if (r() < 0.2 * Math.max(0, S.noise - 0.2)) p.c = 1 - p.c;
+  shuffle(pts, r);
+  const nTr = Math.round(pts.length * 0.7);
+  S.train = pts.slice(0, nTr); S.test = pts.slice(nTr);
+}
+
+/* ---------- Current predictor ---------- */
+function manualModel() {
+  const m = new MLP([2, 1], "tanh", mulberry32(1));
+  m.W[0][0][0] = S.manual.w1; m.W[0][0][1] = S.manual.w2; m.b[0][0] = S.manual.b; return m;
+}
+function currentModel() {
+  if (S.step === "by-hand") return manualModel();
+  if (S.step === "learn") return S.learn.model;
+  return S.net.model;
+}
+function isHard() {
+  return (S.step === "by-hand" && S.manual.act === "step") || (S.step === "learn" && S.learn.rule === "perceptron");
+}
+function predictP(m, u, v) { return isHard() ? (m.z([u, v]) > 0 ? 1 : 0) : m.p([u, v]); }
+
+function computeMetrics() {
+  const m = currentModel(); if (!m) return;
+  const hard = isHard();
+  const evalSet = (set) => {
+    let correct = 0, loss = 0;
+    for (const d of set) {
+      const p = predictP(m, d.u, d.v); const yhat = p > 0.5 ? 1 : 0;
+      if (yhat === d.c) correct++;
+      if (hard) loss += (yhat !== d.c) ? 1 : 0;
+      else { const q = clamp(p, 1e-7, 1 - 1e-7); loss += -(d.c * Math.log(q) + (1 - d.c) * Math.log(1 - q)); }
+    }
+    return { acc: correct / set.length, loss: loss / set.length };
+  };
+  const tr = evalSet(S.train), te = evalSet(S.test);
+  S.metrics = { trainAcc: tr.acc, testAcc: te.acc, loss: tr.loss, testLoss: te.loss };
+}
+
+/* ---------- Drawing: plot ---------- */
+const plot = $("#plot"), pctx = plot.getContext("2d");
+const field = document.createElement("canvas"); const fctx = field.getContext("2d");
+const M = { l: 56, r: 14, t: 12, b: 48 };
+let geom = null;
+const COL = { one: [142, 232, 216], zero: [255, 195, 146], white: [255, 255, 255] };
+function mix(a, b, t) { return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]; }
+function fieldColour(p) {
+  const d = clamp(Math.abs(p - 0.5) * 2, 0, 1);
+  return mix(COL.white, p >= 0.5 ? COL.one : COL.zero, 0.12 + 0.88 * d);
+}
+function sizePlot() {
+  const dpr = window.devicePixelRatio || 1; const w = plot.clientWidth;
+  plot.width = Math.round(w * dpr); plot.height = Math.round(w * dpr);
+  pctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  geom = { W: w, H: w, iw: w - M.l - M.r, ih: w - M.t - M.b };
+}
+const ux = (u) => M.l + (u + 1) / 2 * geom.iw;
+const vy = (v) => M.t + (1 - (v + 1) / 2) * geom.ih;
+
+function drawPlot() {
+  if (!geom) sizePlot();
+  const D = DATASETS[S.ds], m = currentModel();
+  pctx.clearRect(0, 0, geom.W, geom.H);
+  // Prediction field
+  const G = isHard() ? 120 : 72;
+  field.width = G; field.height = G;
+  const img = fctx.createImageData(G, G);
+  for (let gy = 0; gy < G; gy++) for (let gx = 0; gx < G; gx++) {
+    const u = -1 + (gx + 0.5) / G * 2, v = 1 - (gy + 0.5) / G * 2;
+    const c = fieldColour(predictP(m, u, v)); const k = 4 * (gy * G + gx);
+    img.data[k] = c[0]; img.data[k + 1] = c[1]; img.data[k + 2] = c[2]; img.data[k + 3] = 255;
+  }
+  fctx.putImageData(img, 0, 0);
+  pctx.imageSmoothingEnabled = true;
+  pctx.drawImage(field, M.l, M.t, geom.iw, geom.ih);
+  // Frame and ticks
+  pctx.strokeStyle = "#B9CBC8"; pctx.lineWidth = 1; pctx.strokeRect(M.l + .5, M.t + .5, geom.iw - 1, geom.ih - 1);
+  pctx.fillStyle = CSSV("--muted"); pctx.font = "12px " + CSSV("--font-body");
+  pctx.textAlign = "center"; pctx.textBaseline = "top";
+  for (const t of D.x.ticks) { const x = ux(toU(t, D.x)); pctx.fillText(t.toString(), x, M.t + geom.ih + 6); pctx.fillRect(x, M.t + geom.ih, 1, 4); }
+  pctx.textAlign = "right"; pctx.textBaseline = "middle";
+  for (const t of D.y.ticks) { const y = vy(toU(t, D.y)); pctx.fillText(t.toString(), M.l - 8, y); pctx.fillRect(M.l - 4, y, 4, 1); }
+  pctx.fillStyle = CSSV("--ink"); pctx.font = "600 13px " + CSSV("--font-body");
+  pctx.textAlign = "center"; pctx.textBaseline = "alphabetic";
+  pctx.fillText(D.x.label + (D.x.unit ? " (" + D.x.unit + ")" : ""), M.l + geom.iw / 2, geom.H - 8);
+  pctx.save(); pctx.translate(15, M.t + geom.ih / 2); pctx.rotate(-Math.PI / 2);
+  pctx.fillText(D.y.label + (D.y.unit ? " (" + D.y.unit + ")" : ""), 0, 0); pctx.restore();
+  // Decision line and weight vector for a single neuron
+  if (S.step !== "hidden") drawBoundaryLine(m);
+  // Points
+  pctx.save(); pctx.beginPath(); pctx.rect(M.l, M.t, geom.iw, geom.ih); pctx.clip();
+  for (const d of S.train) drawPoint(d, false);
+  if (S.showTest) for (const d of S.test) drawPoint(d, true);
+  pctx.restore();
+}
+function drawPoint(d, test) {
+  const x = ux(d.u), y = vy(d.v), r = 4.6;
+  const fill = d.c === 1 ? "#00BDB6" : "#FD8153", edge = d.c === 1 ? "#0B5E5A" : "#A8351A";
+  pctx.beginPath();
+  if (d.c === 1) pctx.arc(x, y, r, 0, 2 * Math.PI); else pctx.rect(x - r * .85, y - r * .85, r * 1.7, r * 1.7);
+  if (test) { pctx.lineWidth = 2; pctx.strokeStyle = edge; pctx.fillStyle = "rgba(255,255,255,.85)"; pctx.fill(); pctx.stroke(); }
+  else { pctx.fillStyle = fill; pctx.fill(); pctx.lineWidth = 1; pctx.strokeStyle = "rgba(19,56,68,.75)"; pctx.stroke(); }
+}
+function drawBoundaryLine(m) {
+  const w1 = m.W[0][0][0], w2 = m.W[0][0][1], b = m.b[0][0];
+  if (Math.abs(w1) < 1e-9 && Math.abs(w2) < 1e-9) return;
+  const pts = [];
+  const add = (u, v) => { if (u >= -1.0001 && u <= 1.0001 && v >= -1.0001 && v <= 1.0001) pts.push([u, v]); };
+  if (Math.abs(w2) > 1e-9) { add(-1, (-b + w1) / w2); add(1, (-b - w1) / w2); }
+  if (Math.abs(w1) > 1e-9) { add((-b + w2) / w1, -1); add((-b - w2) / w1, 1); }
+  if (pts.length < 2) return;
+  let A = pts[0], B = pts[1], best = 0;
+  for (let i = 0; i < pts.length; i++) for (let j = i + 1; j < pts.length; j++) {
+    const dd = Math.hypot(pts[i][0] - pts[j][0], pts[i][1] - pts[j][1]); if (dd > best) { best = dd; A = pts[i]; B = pts[j]; }
+  }
+  pctx.strokeStyle = "#133844"; pctx.lineWidth = 2.2; pctx.beginPath();
+  pctx.moveTo(ux(A[0]), vy(A[1])); pctx.lineTo(ux(B[0]), vy(B[1])); pctx.stroke();
+  // Weight vector: perpendicular to the boundary, pointing towards output 1
+  const mx = (ux(A[0]) + ux(B[0])) / 2, my = (vy(A[1]) + vy(B[1])) / 2;
+  let dx = w1 * geom.iw, dy = -w2 * geom.ih; const n = Math.hypot(dx, dy); dx /= n; dy /= n;
+  const L = 34, tx = mx + dx * L, ty = my + dy * L;
+  pctx.lineWidth = 2; pctx.beginPath(); pctx.moveTo(mx, my); pctx.lineTo(tx, ty); pctx.stroke();
+  pctx.beginPath(); pctx.moveTo(tx, ty);
+  pctx.lineTo(tx - dx * 9 - dy * 5, ty - dy * 9 + dx * 5); pctx.lineTo(tx - dx * 9 + dy * 5, ty - dy * 9 - dx * 5); pctx.closePath();
+  pctx.fillStyle = "#133844"; pctx.fill();
+  pctx.font = "italic 600 15px " + CSSV("--font-display"); pctx.textAlign = "left"; pctx.textBaseline = "middle";
+  pctx.fillText("w", tx + dx * 6 + 4, ty + dy * 6);
+}
+
+/* ---------- Drawing: network diagram ---------- */
+const net = $("#net"), nctx = net.getContext("2d");
+function drawNet() {
+  const dpr = window.devicePixelRatio || 1, W = net.clientWidth, H = net.clientHeight;
+  net.width = W * dpr; net.height = H * dpr; nctx.setTransform(dpr, 0, 0, dpr, 0, 0); nctx.clearRect(0, 0, W, H);
+  const m = currentModel(); if (!m) return;
+  const D = DATASETS[S.ds];
+  const sizes = m.sizes, cols = sizes.length;
+  const xs = sizes.map((_, i) => 34 + i * (W - 68) / (cols - 1));
+  const gap = (n) => m.W.length === 1 ? 80 : Math.min(30, (H - 30) / Math.max(1, n));
+  const pos = sizes.map((n, i) => Array.from({ length: n }, (_, k) => [xs[i], H / 2 + 6 + (k - (n - 1) / 2) * gap(n)]));
+  // Edges
+  for (let l = 0; l < m.W.length; l++) for (let i = 0; i < m.W[l].length; i++) for (let j = 0; j < m.W[l][i].length; j++) {
+    const w = m.W[l][i][j];
+    nctx.strokeStyle = w >= 0 ? CSSV("--pos") : CSSV("--neg");
+    nctx.globalAlpha = 0.9; nctx.lineWidth = 0.6 + Math.min(6, Math.abs(w) * 1.3);
+    nctx.beginPath(); nctx.moveTo(pos[l][j][0], pos[l][j][1]); nctx.lineTo(pos[l + 1][i][0], pos[l + 1][i][1]); nctx.stroke();
+  }
+  nctx.globalAlpha = 1;
+  // Nodes
+  const single = m.W.length === 1;
+  sizes.forEach((n, l) => pos[l].forEach(([x, y], k) => {
+    const r = single ? 17 : 11;
+    nctx.beginPath(); nctx.arc(x, y, r, 0, 2 * Math.PI);
+    nctx.fillStyle = l === 0 ? CSSV("--blue-light") : (l === sizes.length - 1 ? CSSV("--blue") : "#fff");
+    nctx.fill(); nctx.lineWidth = 1.5; nctx.strokeStyle = CSSV("--blue-dark"); nctx.stroke();
+    nctx.fillStyle = CSSV("--blue-dark"); nctx.textAlign = "center"; nctx.textBaseline = "middle";
+    nctx.font = "italic 600 " + (single ? 15 : 12) + "px " + CSSV("--font-display");
+    const label = l === 0 ? ["x₁", "x₂"][k] : (l === sizes.length - 1 ? "ŷ" : "");
+    nctx.fillText(label, x, y + 1);
+  }));
+  if (!D.x.short.startsWith("x")) {
+    nctx.font = "12px " + CSSV("--font-body"); nctx.fillStyle = CSSV("--muted"); nctx.textAlign = "center";
+    nctx.textBaseline = "bottom"; nctx.fillText(D.x.short, xs[0], pos[0][0][1] - (single ? 20 : 13));
+    nctx.textBaseline = "top"; nctx.fillText(D.y.short, xs[0], pos[0][1][1] + (single ? 20 : 13));
+  }
+  if (single) {
+    const w = m.W[0][0], b = m.b[0][0], [ox, oy] = pos[1][0];
+    nctx.font = "600 13px " + CSSV("--font-body"); nctx.fillStyle = CSSV("--blue-dark");
+    nctx.textBaseline = "middle";
+    const mid = (p, q, t) => [p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t];
+    const a1 = mid(pos[0][0], pos[1][0], 0.45), a2 = mid(pos[0][1], pos[1][0], 0.45);
+    nctx.fillText("w₁ = " + fmt(w[0]), a1[0], a1[1] - 14);
+    nctx.fillText("w₂ = " + fmt(w[1]), a2[0], a2[1] + 14);
+    nctx.fillText("b = " + fmt(b), ox, oy + 32);
+    const act = isHard() ? "step" : "σ";
+    nctx.font = "12px " + CSSV("--font-body"); nctx.fillStyle = CSSV("--muted");
+    nctx.textAlign = "center"; nctx.textBaseline = "top";
+    nctx.fillText("z = w₁x₁ + w₂x₂ + b,   ŷ = " + act + "(z)", W / 2, 2);
+  } else {
+    nctx.font = "12px " + CSSV("--font-body"); nctx.fillStyle = CSSV("--muted"); nctx.textBaseline = "top";
+    for (let l = 1; l < sizes.length - 1; l++) nctx.fillText("hidden " + l, xs[l], 4);
+    nctx.fillText("output", xs[sizes.length - 1], 4);
+    nctx.fillText("input", xs[0], 4);
+  }
+}
+
+/* ---------- Drawing: hidden-neuron maps ---------- */
+function drawThumbs() {
+  const box = $("#thumbs"); const m = S.net.model;
+  if (S.step !== "hidden" || !m) return;
+  const L = m.W.length - 1; // hidden layers
+  const want = m.sizes.slice(1, -1).reduce((a, b) => a + b, 0) + L;
+  if (box.childElementCount !== want) {
+    box.innerHTML = "";
+    for (let l = 0; l < L; l++) {
+      const h = document.createElement("div"); h.className = "thumb-layer"; h.textContent = "Hidden layer " + (l + 1); box.appendChild(h);
+      for (let i = 0; i < m.sizes[l + 1]; i++) {
+        const f = document.createElement("figure"); const c = document.createElement("canvas");
+        c.width = 32; c.height = 32; c.dataset.l = l; c.dataset.i = i; c.setAttribute("aria-label", "Map of hidden neuron " + (i + 1) + " in layer " + (l + 1));
+        const cap = document.createElement("figcaption"); cap.textContent = "h" + (l + 1) + "," + (i + 1);
+        f.append(c, cap); box.appendChild(f);
+      }
+    }
+  }
+  const G = 32, maps = [];
+  for (let l = 0; l < L; l++) maps.push(Array.from({ length: m.sizes[l + 1] }, () => new Float32Array(G * G)));
+  for (let gy = 0; gy < G; gy++) for (let gx = 0; gx < G; gx++) {
+    const u = -1 + (gx + .5) / G * 2, v = 1 - (gy + .5) / G * 2; const { as } = m.forward([u, v]);
+    for (let l = 0; l < L; l++) for (let i = 0; i < m.sizes[l + 1]; i++) maps[l][i][gy * G + gx] = as[l + 1][i];
+  }
+  box.querySelectorAll("canvas").forEach(c => {
+    const l = +c.dataset.l, i = +c.dataset.i, arr = maps[l][i], ctx = c.getContext("2d"), img = ctx.createImageData(G, G);
+    let mx = 1e-9; if (m.act === "relu") for (const a of arr) mx = Math.max(mx, a);
+    for (let k = 0; k < G * G; k++) {
+      const a = arr[k];
+      const p = m.act === "tanh" ? (a + 1) / 2 : m.act === "sigmoid" ? a : 0.5 + 0.5 * a / mx;
+      const col = fieldColour(p); img.data[4 * k] = col[0]; img.data[4 * k + 1] = col[1]; img.data[4 * k + 2] = col[2]; img.data[4 * k + 3] = 255;
+    }
+    ctx.putImageData(img, 0, 0);
+  });
+}
+
+/* ---------- Drawing: loss chart ---------- */
+const chart = $("#chart"), cctx = chart.getContext("2d");
+function drawChart() {
+  if (S.step === "by-hand") return;
+  const dpr = window.devicePixelRatio || 1, W = chart.clientWidth, H = chart.clientHeight;
+  chart.width = W * dpr; chart.height = H * dpr; cctx.setTransform(dpr, 0, 0, dpr, 0, 0); cctx.clearRect(0, 0, W, H);
+  const h = S.history, ml = 40, mr = 10, mt = 10, mb = 26, iw = W - ml - mr, ih = H - mt - mb;
+  const hard = isHard();
+  let ymax = hard ? 0.6 : 0.8; for (const p of h) ymax = Math.max(ymax, Math.min(3, p.tr), S.showTest ? Math.min(3, p.te) : 0);
+  ymax = Math.ceil(ymax * 5) / 5;
+  const xmax = Math.max(10, h.length ? h[h.length - 1].e : 10);
+  cctx.font = "11px " + CSSV("--font-body"); cctx.fillStyle = CSSV("--muted"); cctx.strokeStyle = "#E3ECEA"; cctx.lineWidth = 1;
+  cctx.textAlign = "right"; cctx.textBaseline = "middle";
+  for (let k = 0; k <= 4; k++) { const v = ymax * k / 4, y = mt + ih - ih * k / 4; cctx.beginPath(); cctx.moveTo(ml, y + .5); cctx.lineTo(ml + iw, y + .5); cctx.stroke(); cctx.fillText(v.toFixed(hard ? 2 : 1), ml - 6, y); }
+  cctx.textAlign = "center"; cctx.textBaseline = "top";
+  cctx.fillText("0", ml, mt + ih + 6); cctx.fillText(xmax.toString(), ml + iw, mt + ih + 6); cctx.fillText("epoch", ml + iw / 2, mt + ih + 6);
+  const X = (e) => ml + iw * e / xmax, Y = (v) => mt + ih - ih * Math.min(v, ymax) / ymax;
+  const line = (key, colour, dash) => {
+    if (h.length < 1) return;
+    cctx.setLineDash(dash); cctx.strokeStyle = colour; cctx.lineWidth = 2; cctx.beginPath();
+    h.forEach((p, i) => { const x = X(p.e), y = Y(p[key]); if (i === 0) cctx.moveTo(x, y); else cctx.lineTo(x, y); });
+    cctx.stroke(); cctx.setLineDash([]);
+    const last = h[h.length - 1]; cctx.fillStyle = colour; cctx.beginPath(); cctx.arc(X(last.e), Y(last[key]), 3.5, 0, 2 * Math.PI); cctx.fill();
+  };
+  line("tr", "#133844", []);
+  if (S.showTest) line("te", "#00BDB6", [5, 4]);
+  cctx.textAlign = "left"; cctx.textBaseline = "top"; cctx.font = "600 11px " + CSSV("--font-body");
+  cctx.fillStyle = "#133844"; cctx.fillText((hard ? "Training error rate" : "Training loss"), ml + 8, mt + 2);
+  if (S.showTest) { cctx.fillStyle = "#00838A"; cctx.fillText((hard ? "Test error rate" : "Test loss") + " (dashed)", ml + 8, mt + 16); }
+}
+
+/* ---------- Text panels ---------- */
+const IDEA = {
+  "by-hand": "A single artificial neuron adds up its inputs, each multiplied by a weight, adds a bias, and passes the total z through an activation function. Its decision boundary is the line where z = 0. Move the sliders to place that line.",
+  "learn": "Now the neuron sets its own weights. In each epoch it sees every training example and nudges each weight in the direction that lowers the loss. Watch the sliders on the left move by themselves.",
+  "hidden": "One neuron can only draw a straight line. Each hidden neuron draws its own line; the output neuron combines them, so the network can bend its boundary around curved and enclosed regions."
+};
+function mathsHTML() {
+  const D = DATASETS[S.ds];
+  if (S.step === "by-hand") {
+    const { w1, w2, b, act } = S.manual;
+    return `<div class="math"><span class="cap">Weighted sum (inputs scaled to the range −1 to 1)</span>
+      <i>z</i> = <i>w</i><sub>1</sub><i>x</i><sub>1</sub> + <i>w</i><sub>2</sub><i>x</i><sub>2</sub> + <i>b</i><br>
+      <span class="live">z = ${fmt(w1)}·x₁${signed(w2)}·x₂${signed(b)}</span></div>
+      <div class="math"><span class="cap">Activation</span>${act === "step"
+        ? `<i>ŷ</i> = 1 if <i>z</i> &gt; 0, otherwise 0`
+        : `<i>ŷ</i> = σ(<i>z</i>) = 1 / (1 + <i>e</i><sup>−<i>z</i></sup>)`}</div>
+      <div class="math"><span class="cap">Decision boundary: where z = 0, always a straight line. The weight vector w is perpendicular to it.</span>
+      <i>w</i><sub>1</sub><i>x</i><sub>1</sub> + <i>w</i><sub>2</sub><i>x</i><sub>2</sub> + <i>b</i> = 0</div>`;
+  }
+  if (S.step === "learn") {
+    const m = S.learn.model, w = m.W[0][0], b = m.b[0][0];
+    if (S.learn.rule === "perceptron") {
+      const lp = S.lastPerc;
+      return `<div class="math"><span class="cap">Prediction</span><i>ŷ</i> = 1 if <i>w</i><sub>1</sub><i>x</i><sub>1</sub> + <i>w</i><sub>2</sub><i>x</i><sub>2</sub> + <i>b</i> &gt; 0, otherwise 0</div>
+        <div class="math"><span class="cap">Perceptron rule: change the weights only after a mistake</span>
+        <i>w<sub>i</sub></i> ← <i>w<sub>i</sub></i> + η (<i>y</i> − <i>ŷ</i>) <i>x<sub>i</sub></i><br>
+        <span class="live">${lp ? `Last correction: y − ŷ = ${lp.err > 0 ? "+1" : "−1"}` : "No mistakes in the last epoch"}</span></div>
+        <div class="math"><span class="cap">Compare Hebb's rule (1949): strengthen when input and output are active together</span>
+        Δ<i>w<sub>i</sub></i> = η <i>x<sub>i</sub></i> <i>y</i></div>`;
+    }
+    const g = S.lastGrad;
+    return `<div class="math"><span class="cap">Cross-entropy loss for one example</span>
+      <i>L</i> = −[<i>y</i> log <i>ŷ</i> + (1 − <i>y</i>) log(1 − <i>ŷ</i>)]</div>
+      <div class="math"><span class="cap">Its gradient is remarkably simple</span>
+      ∂<i>L</i>/∂<i>w<sub>i</sub></i> = (<i>ŷ</i> − <i>y</i>) <i>x<sub>i</sub></i> &nbsp;&nbsp; ∂<i>L</i>/∂<i>b</i> = <i>ŷ</i> − <i>y</i><br>
+      <span class="live">${g ? `Last batch: ∂L/∂w₁ = ${fmt(g.w1, 3)}, ∂L/∂w₂ = ${fmt(g.w2, 3)}, ∂L/∂b = ${fmt(g.b, 3)}` : "Press Train or One epoch"}</span></div>
+      <div class="math"><span class="cap">Gradient descent: step downhill, scaled by the learning rate η</span>
+      <i>w<sub>i</sub></i> ← <i>w<sub>i</sub></i> − η ∂<i>L</i>/∂<i>w<sub>i</sub></i><br>
+      <span class="live">η = ${S.learn.lr.toFixed(2)} · w₁ = ${fmt(w[0])}, w₂ = ${fmt(w[1])}, b = ${fmt(b)}</span></div>`;
+  }
+  const f = { tanh: "tanh", relu: "ReLU", sigmoid: "σ" }[S.net.act];
+  const nParams = S.net.model ? S.net.model.W.reduce((a, W, l) => a + W.length * W[0].length + S.net.model.b[l].length, 0) : 0;
+  return `<div class="math"><span class="cap">Hidden neuron j: its own weighted sum and activation</span>
+    <i>h<sub>j</sub></i> = ${f}(Σ<sub><i>i</i></sub> <i>w<sub>ji</sub></i> <i>x<sub>i</sub></i> + <i>b<sub>j</sub></i>)</div>
+    <div class="math"><span class="cap">Output neuron: combines the hidden neurons</span>
+    <i>ŷ</i> = σ(Σ<sub><i>j</i></sub> <i>v<sub>j</sub></i> <i>h<sub>j</sub></i> + <i>c</i>)</div>
+    <div class="math"><span class="cap">Backpropagation: the chain rule passes the output error δ = ŷ − y back to each hidden weight</span>
+    ∂<i>L</i>/∂<i>w<sub>ji</sub></i> = δ · <i>v<sub>j</sub></i> · ${f}′(<i>z<sub>j</sub></i>) · <i>x<sub>i</sub></i><br>
+    <span class="live">This network has ${nParams} parameters (weights and biases).</span></div>`;
+}
+
+/* ---------- Tasks ---------- */
+const TASKS = [
+  { step: "by-hand", ds: "celltype", text: "Separate the two cell types by hand with at least 95% training accuracy.", check: () => S.metrics.trainAcc >= 0.95 },
+  { step: "by-hand", ds: "celltype", text: "Which sign does w₁ (spike width) need, and why?", hint: "Interneurons are the output-1 class and have narrow spikes. A wider spike should push z down, so w₁ must be negative. A higher firing rate should push z up, so w₂ is positive." },
+  { step: "by-hand", ds: "any", text: "Switch between Step and Sigmoid. What changes, and what stays the same?", hint: "The boundary (z = 0) does not move. The sigmoid turns a hard yes or no into a graded output between 0 and 1. That smoothness is what lets the neuron learn by gradient descent in step 2." },
+  { step: "by-hand", ds: "place", text: "Get above 70% training accuracy on the place cell by hand.", check: () => S.metrics.trainAcc > 0.70 },
+  { step: "by-hand", ds: "place", text: "Why can a single neuron never capture a place field?", hint: "Its boundary is the set of points where w₁x₁ + w₂x₂ + b = 0, which is always a straight line. A place field is an enclosed patch, and no single line can enclose anything." },
+  { step: "learn", ds: "celltype", text: "Train with gradient descent until test accuracy reaches 95%.", check: () => S.learn.rule === "gd" && S.metrics.testAcc >= 0.95 && S.epoch > 0 },
+  { step: "learn", ds: "any", text: "Set the learning rate above 5 and train. What happens to the loss curve?", hint: "Steps that are too large overshoot the bottom of the loss valley, so the loss jumps around instead of falling smoothly. Too small, and learning crawls." },
+  { step: "learn", ds: "celltype", text: "Compare the perceptron rule with gradient descent. Where does each boundary end up?", hint: "The perceptron rule stops changing as soon as every training point is correct, so its line can sit right next to some points. Gradient descent on cross-entropy keeps pushing the line towards the middle of the gap, which usually generalises better." },
+  { step: "learn", ds: "xor", text: "Train a single neuron on XOR. What is the best accuracy it reaches?", hint: "Around 50 to 75%: no straight line separates XOR. Minsky and Papert's 1969 proof of this limitation contributed to a long slowdown in neural network research." },
+  { step: "hidden", ds: "xor", text: "Solve XOR with one hidden layer of only 2 neurons (test accuracy at least 90%). If it gets stuck, press Reset weights: why might that help?", check: () => S.net.layers === 1 && S.net.neurons === 2 && S.metrics.testAcc >= 0.9 && S.epoch > 0, hint: "Two lines are enough to carve XOR into the right regions, but gradient descent can settle in a poor arrangement (a local minimum). A new random start gives it another chance." },
+  { step: "hidden", ds: "place", text: "Find the smallest network that captures the place field with at least 95% test accuracy.", check: () => S.metrics.testAcc >= 0.95 && S.epoch > 0, best: true },
+  { step: "hidden", ds: "place", text: "Look at the hidden-neuron maps. How does the output neuron build an enclosed field out of straight lines?", hint: "Each hidden neuron splits the arena along one line. The output neuron fires only where several of them agree, roughly an AND of half-planes, which encloses a patch. Real place fields are thought to arise partly from combining inputs such as grid cells." },
+  { step: "hidden", ds: "spiral", text: "Solve the spiral with at least 90% test accuracy. Does a second layer help more than extra neurons?", check: () => S.metrics.testAcc >= 0.9 && S.epoch > 0 },
+  { step: "hidden", ds: "any", text: "Set the noise to 50%, use 2 layers of 8 neurons and train for a long time. Watch the test loss. What happens, and why?", hint: "Training loss keeps falling while test loss starts to rise: the network is memorising the noise in its training data rather than the underlying pattern. This is overfitting." }
+];
+function taskKey(t) { return TASKS.indexOf(t); }
+function renderTasks() {
+  const list = TASKS.filter(t => t.step === S.step && (t.ds === "any" || t.ds === S.ds));
+  const others = TASKS.filter(t => t.step === S.step && t.ds !== "any" && t.ds !== S.ds);
+  const ol = $("#tasks"); ol.innerHTML = "";
+  for (const t of list) {
+    const li = document.createElement("li"); const k = taskKey(t);
+    const done = S.solved.has(k);
+    li.innerHTML = `<span class="tick ${t.check ? (done ? "done" : "") : "q"}" aria-hidden="true">${done ? "✓" : ""}</span>
+      <div><div>${t.text}</div>${t.best && S.best[k] ? `<div class="task-status">Smallest so far: ${S.best[k]}</div>` : ""}${done && !t.best ? `<div class="task-status">Done</div>` : ""}
+      ${t.hint ? `<details><summary>Show an answer</summary><p>${t.hint}</p></details>` : ""}</div>`;
+    ol.appendChild(li);
+  }
+  if (others.length) {
+    const names = [...new Set(others.map(t => ({ celltype: "Cell type", place: "Place cell", xor: "XOR", spiral: "Spiral" })[t.ds]))];
+    const li = document.createElement("li"); li.innerHTML = `<span></span><div class="note">More tasks with: ${names.join(", ")}.</div>`;
+    ol.appendChild(li);
+  }
+}
+function checkTasks() {
+  let changed = false;
+  for (const t of TASKS) {
+    if (!t.check || t.step !== S.step || !(t.ds === "any" || t.ds === S.ds)) continue;
+    const k = taskKey(t);
+    if (t.check()) {
+      if (t.best) {
+        const desc = S.net.layers + " layer" + (S.net.layers > 1 ? "s" : "") + " × " + S.net.neurons + " neuron" + (S.net.neurons > 1 ? "s" : "");
+        const size = S.net.layers * S.net.neurons;
+        if (!S.best[k] || size < S.best[k + "_n"]) { S.best[k] = desc; S.best[k + "_n"] = size; changed = true; }
+      }
+      if (!S.solved.has(k)) { S.solved.add(k); changed = true; }
+    }
+  }
+  if (changed) renderTasks();
+}
+
+/* ---------- Model management ---------- */
+function newLearnModel(fromManual) {
+  const m = new MLP([2, 1], "tanh", rng);
+  if (fromManual) { m.W[0][0][0] = S.manual.w1; m.W[0][0][1] = S.manual.w2; m.b[0][0] = S.manual.b; }
+  else { m.W[0][0][0] = 0.5 * gauss(rng); m.W[0][0][1] = 0.5 * gauss(rng); m.b[0][0] = 0; }
+  S.learn.model = m; S.learn.fromManual = fromManual;
+  resetTraining();
+}
+function newNetModel() {
+  const sizes = [2, ...Array(S.net.layers).fill(S.net.neurons), 1];
+  S.net.model = new MLP(sizes, S.net.act, rng); resetTraining();
+}
+function resetTraining() {
+  stop(); S.epoch = 0; S.history = []; S.diverged = false; S.lastGrad = null; S.lastPerc = null;
+  $("#diverged").classList.add("hidden");
+  computeMetrics(); recordHistory();
+}
+function recordHistory() {
+  if (S.step === "by-hand") return;
+  S.history.push({ e: S.epoch, tr: S.metrics.loss, te: S.metrics.testLoss });
+  if (S.history.length > 1200) S.history = S.history.filter((_, i) => i % 2 === 0 || i === S.history.length - 1);
+}
+function runEpoch() {
+  if (S.step === "learn") {
+    const m = S.learn.model;
+    if (S.learn.rule === "perceptron") S.lastPerc = m.epochPerceptron(S.train, S.learn.lr, rng);
+    else S.lastGrad = m.epochGD(S.train, S.learn.lr, rng);
+  } else if (S.step === "hidden") {
+    S.net.model.epochGD(S.train, S.net.lr, rng, 25);
+  }
+  S.epoch++; computeMetrics();
+  if (!isFinite(S.metrics.loss) || S.metrics.loss > 50) { S.diverged = true; stop(); $("#diverged").classList.remove("hidden"); }
+  recordHistory();
+}
+
+/* ---------- Animation loop ---------- */
+let raf = null;
+function start() {
+  if (S.step === "by-hand" || S.diverged) return;
+  S.running = true; updateTrainButtons();
+  const tick = () => {
+    if (!S.running) return;
+    const per = S.step === "learn" ? 1 : 4;
+    for (let k = 0; k < per && S.running; k++) runEpoch();
+    const cap = S.step === "learn" ? 1500 : 4000;
+    if (S.epoch >= cap) stop();
+    renderLive();
+    raf = requestAnimationFrame(tick);
+  };
+  raf = requestAnimationFrame(tick);
+}
+function stop() { S.running = false; if (raf) cancelAnimationFrame(raf); raf = null; updateTrainButtons(); }
+function updateTrainButtons() {
+  $("#train1").textContent = S.running && S.step === "learn" ? "Pause" : "Train";
+  $("#train3").textContent = S.running && S.step === "hidden" ? "Pause" : "Train";
+}
+
+/* ---------- Render ---------- */
+function renderMetrics() {
+  const m = S.metrics, hard = isHard();
+  $("#m-train").textContent = pct(m.trainAcc);
+  $("#m-test").textContent = S.showTest ? pct(m.testAcc) : "hidden";
+  $("#m-loss-k").textContent = hard ? "Error rate" : "Loss";
+  $("#m-loss").textContent = isFinite(m.loss) ? m.loss.toFixed(hard ? 2 : 3) : "–";
+  $("#m-epoch").textContent = S.step === "by-hand" ? "–" : S.epoch;
+}
+function renderLearnReadouts() {
+  if (S.step !== "learn") return;
+  const m = S.learn.model, w = m.W[0][0], b = m.b[0][0];
+  $("#lw1").textContent = fmt(w[0]); $("#lw2").textContent = fmt(w[1]); $("#lb").textContent = fmt(b);
+  $("#lw1r").value = clamp(w[0], -8, 8); $("#lw2r").value = clamp(w[1], -8, 8); $("#lbr").value = clamp(b, -8, 8);
+}
+function renderLive() {
+  drawPlot(); drawNet(); renderMetrics(); renderLearnReadouts(); drawThumbs(); drawChart();
+  $("#maths").innerHTML = mathsHTML(); checkTasks();
+}
+function renderAll() {
+  // Tabs
+  $$("nav.steps button").forEach(b => b.setAttribute("aria-selected", String(b.dataset.step === S.step)));
+  $$("[data-for]").forEach(p => p.classList.toggle("hidden", p.dataset.for !== S.step));
+  $$("#datasets button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.ds === S.ds)));
+  const D = DATASETS[S.ds];
+  $("#ds-blurb").textContent = D.blurb;
+  $("#noise-out").textContent = Math.round(S.noise * 100) + "%";
+  $("#w1-name").textContent = "(" + D.x.short + ")"; $("#w2-name").textContent = "(" + D.y.short + ")";
+  // Manual sliders
+  $("#w1").value = S.manual.w1; $("#w2").value = S.manual.w2; $("#b").value = S.manual.b;
+  $("#w1-out").textContent = fmt(S.manual.w1); $("#w2-out").textContent = fmt(S.manual.w2); $("#b-out").textContent = fmt(S.manual.b);
+  $("#act-step").checked = S.manual.act === "step"; $("#act-sig").checked = S.manual.act === "sigmoid";
+  // Learn
+  $("#rule").value = S.learn.rule; $("#lr1").value = sliderFromLr(S.learn.lr); $("#lr1-out").textContent = S.learn.lr.toFixed(2);
+  $("#learn-note").textContent = S.learn.fromManual ? "Starting from your hand-tuned weights in step 1. Reset weights gives a random start." : "Starting from small random weights.";
+  // Net
+  $("#layers-1").checked = S.net.layers === 1; $("#layers-2").checked = S.net.layers === 2;
+  $("#neurons").value = S.net.neurons; $("#neurons-out").textContent = S.net.neurons;
+  $("#act3").value = S.net.act; $("#lr3").value = sliderFromLr(S.net.lr); $("#lr3-out").textContent = S.net.lr.toFixed(2);
+  // Panels
+  $("#idea").textContent = IDEA[S.step];
+  $("#thumb-panel").classList.toggle("hidden", S.step !== "hidden");
+  $("#chart-panel").classList.toggle("hidden", S.step === "by-hand");
+  // Legend
+  $("#legend").innerHTML = `<span><i class="sq" style="background:#FD8153"></i>${D.classes[0]} (y = 0)</span>
+    <span><i class="dot" style="background:#00BDB6"></i>${D.classes[1]} (y = 1)</span>
+    ${S.showTest ? `<span><i class="dot hollow" style="border-color:#0B5E5A"></i>Test data (hollow)</span>` : ""}
+    <span><i class="sq" style="background:linear-gradient(90deg,#FFC392,#fff,#8EE8D8);width:28px"></i>Model output 0 to 1</span>`;
+  sizePlot(); renderTasks(); renderLive();
+}
+
+/* ---------- Events ---------- */
+function setStep(step, fromHash) {
+  if (!["by-hand", "learn", "hidden"].includes(step)) step = "by-hand";
+  stop(); S.step = step;
+  if (step === "learn" && !S.learn.model) newLearnModel(true);
+  if (step === "hidden" && !S.net.model) newNetModel();
+  if (step !== "by-hand") { computeMetrics(); if (!S.history.length) recordHistory(); }
+  if (!fromHash && location.hash !== "#" + step) { try { history.replaceState(null, "", "#" + step); } catch (e) { location.hash = step; } }
+  computeMetrics(); renderAll();
+}
+$$("nav.steps button").forEach(b => b.addEventListener("click", () => setStep(b.dataset.step)));
+window.addEventListener("hashchange", () => setStep(location.hash.slice(1), true));
+
+$$("#datasets button").forEach(b => b.addEventListener("click", () => {
+  S.ds = b.dataset.ds; makeData();
+  if (S.learn.model) newLearnModel(false);
+  if (S.net.model) newNetModel();
+  computeMetrics(); renderAll();
+}));
+$("#noise").addEventListener("input", (e) => { S.noise = +e.target.value / 100; makeData(); resetAfterData(); });
+$("#resample").addEventListener("click", () => { S.seed++; makeData(); resetAfterData(); });
+function resetAfterData() {
+  if (S.step === "learn") resetTraining();
+  if (S.step === "hidden") resetTraining();
+  computeMetrics(); renderAll();
+}
+$("#show-test").addEventListener("change", (e) => { S.showTest = e.target.checked; renderAll(); });
+
+for (const id of ["w1", "w2", "b"]) $("#" + id).addEventListener("input", (e) => {
+  S.manual[id] = +e.target.value; $("#" + id + "-out").textContent = fmt(S.manual[id]);
+  S.learn.model = null; // step 2 will restart from these weights
+  computeMetrics(); renderLive();
+});
+$$("input[name=act1]").forEach(r => r.addEventListener("change", (e) => { S.manual.act = e.target.value; computeMetrics(); renderLive(); }));
+$("#randomise").addEventListener("click", () => {
+  S.manual.w1 = Math.round(gauss(rng) * 3 * 20) / 20; S.manual.w2 = Math.round(gauss(rng) * 3 * 20) / 20; S.manual.b = Math.round(gauss(rng) * 20) / 20;
+  S.learn.model = null; computeMetrics(); renderAll();
+});
+
+$("#rule").addEventListener("change", (e) => { S.learn.rule = e.target.value; resetTraining(); renderAll(); });
+$("#lr1").addEventListener("input", (e) => { S.learn.lr = lrFromSlider(+e.target.value); $("#lr1-out").textContent = S.learn.lr.toFixed(2); });
+$("#train1").addEventListener("click", () => S.running ? stop() : start());
+$("#epoch1").addEventListener("click", () => { stop(); runEpoch(); renderLive(); });
+$("#reset1").addEventListener("click", () => { newLearnModel(false); renderAll(); });
+
+$$("input[name=layers]").forEach(r => r.addEventListener("change", (e) => { S.net.layers = +e.target.value; newNetModel(); renderAll(); }));
+$("#neurons").addEventListener("input", (e) => { S.net.neurons = +e.target.value; $("#neurons-out").textContent = S.net.neurons; newNetModel(); renderAll(); });
+$("#act3").addEventListener("change", (e) => { S.net.act = e.target.value; newNetModel(); renderAll(); });
+$("#lr3").addEventListener("input", (e) => { S.net.lr = lrFromSlider(+e.target.value); $("#lr3-out").textContent = S.net.lr.toFixed(2); });
+$("#train3").addEventListener("click", () => S.running ? stop() : start());
+$("#epoch3").addEventListener("click", () => { stop(); runEpoch(); renderLive(); });
+$("#reset3").addEventListener("click", () => { newNetModel(); renderAll(); });
+
+// Pointer readout
+plot.addEventListener("pointermove", (ev) => {
+  if (!geom) return;
+  const rect = plot.getBoundingClientRect(), px = ev.clientX - rect.left, py = ev.clientY - rect.top;
+  const u = (px - M.l) / geom.iw * 2 - 1, v = 1 - (py - M.t) / geom.ih * 2;
+  if (u < -1 || u > 1 || v < -1 || v > 1) { $("#readout").textContent = "Move the pointer over the plot to read the model's output."; return; }
+  const D = DATASETS[S.ds], m = currentModel();
+  const fx = fromU(u, D.x).toFixed(D.x.d) + (D.x.unit ? " " + D.x.unit : ""), fy = fromU(v, D.y).toFixed(D.y.d) + (D.y.unit ? " " + D.y.unit : "");
+  let near = null, bd = 9;
+  for (const d of S.train.concat(S.showTest ? S.test : [])) { const dd = Math.hypot(ux(d.u) - px, vy(d.v) - py); if (dd < bd) { bd = dd; near = d; } }
+  const z = m.z([u, v]), p = predictP(m, u, v);
+  const outTxt = isHard() ? `ŷ = ${p}` : `z = ${fmt(z)}, ŷ = σ(z) = ${p.toFixed(2)}`;
+  $("#readout").textContent = near
+    ? `${D.x.short} ${near.x.toFixed(D.x.d)}${D.x.unit ? " " + D.x.unit : ""}, ${D.y.short} ${near.y.toFixed(D.y.d)}${D.y.unit ? " " + D.y.unit : ""}: ${D.classes[near.c]}${S.test.includes(near) ? " (test)" : ""}. Model: ${outTxt}`
+    : `${D.x.short} ${fx}, ${D.y.short} ${fy}. Model: ${outTxt}`;
+});
+plot.addEventListener("pointerleave", () => { $("#readout").textContent = "Move the pointer over the plot to read the model's output."; });
+
+let rT = null;
+window.addEventListener("resize", () => { clearTimeout(rT); rT = setTimeout(() => { sizePlot(); renderLive(); }, 80); });
+
+/* ---------- Start ---------- */
+makeData();
+const startStep = location.hash.slice(1);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { sizePlot(); renderLive(); });
+setStep(["by-hand", "learn", "hidden"].includes(startStep) ? startStep : "by-hand", true);
+</script>
+</body>
+</html>
